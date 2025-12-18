@@ -1,41 +1,67 @@
-import matplotlib
-# 固定后端，避免 PyCharm / 系统冲突
-matplotlib.use("TkAgg")  # 或 "Qt5Agg"，TkAgg 通常自带
-
 import matplotlib.pyplot as plt
 import networkx as nx
 
 
-def plot_network(G, edge_flow=None, title="Road Network"):
+def plot_network(G, edge_flow=None, path=None, title="Road Network"):
     """
-    可视化路网
-    G: NetworkX 图
-    edge_flow: dict {(u,v): flow_value}，可选
+    返回 matplotlib Figure，供 Streamlit 显式渲染
     """
-    # 节点位置
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+
     pos = {node: (data["x"], data["y"]) for node, data in G.nodes(data=True)}
 
-    plt.figure(figsize=(8, 6))
+    nx.draw_networkx_nodes(
+        G, pos,
+        node_size=500,
+        node_color="skyblue",
+        ax=ax
+    )
+    nx.draw_networkx_labels(
+        G, pos,
+        font_size=12,
+        font_weight="bold",
+        ax=ax
+    )
 
-    # 画节点
-    nx.draw_networkx_nodes(G, pos, node_size=500, node_color="skyblue")
-    nx.draw_networkx_labels(G, pos, font_size=12, font_weight="bold")
+    nx.draw_networkx_edges(
+        G, pos,
+        width=2,
+        edge_color="lightgray",
+        arrows=True,
+        ax=ax
+    )
 
-    # 画边
+    if path:
+        path_edges = list(zip(path[:-1], path[1:]))
+        nx.draw_networkx_edges(
+            G, pos,
+            edgelist=path_edges,
+            width=4,
+            edge_color="red",
+            arrows=True,
+            ax=ax
+        )
+
     if edge_flow:
-        # 根据流量调整线宽
-        widths = [edge_flow.get((u, v), 1) / 500 for u, v in G.edges()]  # 缩放
-        nx.draw_networkx_edges(G, pos, width=widths, edge_color="orange", arrows=True)
-        # 标注流量
-        edge_labels = {(u, v): str(edge_flow.get((u, v), 0)) for u, v in G.edges()}
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color="red")
-    else:
-        nx.draw_networkx_edges(G, pos, width=2, edge_color="gray", arrows=True)
+        edge_labels = {
+            (u, v): int(edge_flow.get((u, v), 0))
+            for u, v in G.edges()
+        }
+        nx.draw_networkx_edge_labels(
+            G, pos,
+            edge_labels=edge_labels,
+            font_color="blue",
+            ax=ax
+        )
 
-    plt.title(title)
-    plt.axis("off")
-    plt.tight_layout()
-    plt.show()
+    ax.set_title(title)
+    ax.axis("off")
+    fig.tight_layout()
+
+    return fig
+
+
 
 
 if __name__ == "__main__":
