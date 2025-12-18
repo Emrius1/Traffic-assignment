@@ -1,13 +1,14 @@
 # app.py
 import streamlit as st
+import pandas as pd
 
 from Tools.Graph_builder import build_graph
+from Tools.DemandReader import read_demand
 from Assignment.Shortest_Path import (
     shortest_path_freeflow,
     shortest_path_congested
 )
 from Visualization.Plot_network import plot_network
-
 
 st.set_page_config(
     page_title="Traffic Assignment Demo",
@@ -16,11 +17,9 @@ st.set_page_config(
 
 st.title("🚦 Traffic Assignment Demo")
 
-# build network
 G = build_graph()
 nodes = list(G.nodes)
 
-# selection
 origin = st.selectbox("Origin", nodes)
 destination = st.selectbox("Destination", nodes)
 
@@ -47,3 +46,8 @@ if st.button("Find Shortest Path"):
         title=title
     )
     st.pyplot(fig)
+
+    demand = read_demand()
+    df_demand = pd.DataFrame(demand)
+    st.subheader("🚗 OD Demand Table")
+    st.dataframe(df_demand)
