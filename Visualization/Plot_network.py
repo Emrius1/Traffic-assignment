@@ -1,29 +1,24 @@
+
 import matplotlib.pyplot as plt
 import networkx as nx
 
 
-def plot_network(G, edge_flow=None, path=None, title="Road Network"):
-    """
-    返回 matplotlib Figure，供 Streamlit 显式渲染
-    """
-
+def plot_network(
+    G,
+    edge_flow=None,
+    path=None,
+    label_mode="static",
+    title="Road Network"
+):
     fig, ax = plt.subplots(figsize=(8, 6))
 
-    pos = {node: (data["x"], data["y"]) for node, data in G.nodes(data=True)}
+    pos = {n: (d["x"], d["y"]) for n, d in G.nodes(data=True)}
 
-    nx.draw_networkx_nodes(
-        G, pos,
-        node_size=500,
-        node_color="skyblue",
-        ax=ax
-    )
-    nx.draw_networkx_labels(
-        G, pos,
-        font_size=12,
-        font_weight="bold",
-        ax=ax
-    )
+    # nodes
+    nx.draw_networkx_nodes(G, pos, node_size=500, node_color="skyblue", ax=ax)
+    nx.draw_networkx_labels(G, pos, font_size=12, font_weight="bold", ax=ax)
 
+    # base edges
     nx.draw_networkx_edges(
         G, pos,
         width=2,
@@ -32,6 +27,7 @@ def plot_network(G, edge_flow=None, path=None, title="Road Network"):
         ax=ax
     )
 
+    # highlight path
     if path:
         path_edges = list(zip(path[:-1], path[1:]))
         nx.draw_networkx_edges(
@@ -43,15 +39,25 @@ def plot_network(G, edge_flow=None, path=None, title="Road Network"):
             ax=ax
         )
 
-    if edge_flow:
-        edge_labels = {
-            (u, v): int(edge_flow.get((u, v), 0))
-            for u, v in G.edges()
-        }
+    # edge labels
+    edge_labels = {}
+    for u, v, data in G.edges(data=True):
+        if label_mode == "static":
+            edge_labels[(u, v)] = (
+                f"C={data.get('capacity')}\n"
+                f"V={data.get('speedmax')}"
+            )
+        elif label_mode == "flow" and edge_flow:
+            edge_labels[(u, v)] = f"q={int(edge_flow.get((u, v), 0))}"
+        elif label_mode == "time":
+            edge_labels[(u, v)] = f"t={data.get('t0', 0):.2f}"
+
+    if edge_labels:
         nx.draw_networkx_edge_labels(
             G, pos,
             edge_labels=edge_labels,
             font_color="blue",
+            font_size=9,
             ax=ax
         )
 
@@ -60,9 +66,6 @@ def plot_network(G, edge_flow=None, path=None, title="Road Network"):
     fig.tight_layout()
 
     return fig
-
-
-
 
 if __name__ == "__main__":
     # 测试用例

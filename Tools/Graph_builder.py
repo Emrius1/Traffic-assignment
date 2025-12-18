@@ -10,7 +10,7 @@ def build_graph():
         G.add_node(name, x=x, y=y)
 
     for i, link_name in enumerate(links["between"]):
-        u, v = link_name[0], link_name[1]  # "AB" -> A->B
+        u, v = link_name[0], link_name[1]
         capacity = links["capacity"][i]
         speedmax = links["speedmax"][i]
 
